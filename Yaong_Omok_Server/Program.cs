@@ -8,12 +8,12 @@ namespace Yaong_Omok_Server {
 
         private static List<TcpClient> _clients = [];
 
-        static void Main() {
+        private static void Main() {
             Server().Wait();
         }
 
-        async static Task Server() {
-            TcpListener listener = new TcpListener(IPAddress.Parse("172.31.3.146"), 5555);
+        private async static Task Server() {
+            TcpListener listener = new(IPAddress.Parse("172.31.3.146"), 5555);
             listener.Start();
 
             Console.WriteLine("Server is Running!");
@@ -22,28 +22,32 @@ namespace Yaong_Omok_Server {
                 TcpClient client = await listener.AcceptTcpClientAsync();
                 _clients.Add(client);
 
+                Console.WriteLine("Connect Client!");
+
                 HandleClient(client);
             }
         }
 
-        async static void HandleClient(TcpClient client) {
+        private async static void HandleClient(TcpClient client) {
             NetworkStream stream = client.GetStream();
             
             while(stream.CanRead) {
                 try {
                     byte[] buffer = new byte[MAX_SIZE];
-                    int bytes = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    int nbytes = await stream.ReadAsync(buffer);
 
-                    if(bytes == 0)
+                    if(nbytes == 0)
                         break;
 
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytes);
+                    string message = Encoding.ASCII.GetString(buffer, 0, nbytes);
+
+                    Console.WriteLine(message);
                 }
                 catch(ObjectDisposedException) {
-                    Console.WriteLine("Disconnect Client");
                     break;
                 }
             }
+            Console.WriteLine("Disconnect Client!");
             stream.Close();
             client.Close();
         }
