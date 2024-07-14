@@ -1,14 +1,17 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace Yaong_Omok_Server {
-    public class Dispatcher {
+    public class Dispatcher : Singleton<Dispatcher> {
         public Dictionary<string, Room> rooms = [];
 
         public void Dispatch(TcpClient client, string message) {
-            Packet? packet = JsonSerializer.Deserialize<Packet>(message);
+            Packet? packet = JsonConvert.DeserializeObject<Packet>(message);
 
-            switch(packet.Type) {
+            switch (packet.Type) {
                 case PacketType.MakeRoom:
                     MakeRoom(client, packet.Data);
                     break;
@@ -27,11 +30,13 @@ namespace Yaong_Omok_Server {
         }
 
         private void MakeRoom(TcpClient client, object data) {
-            RoomInfo roomInfo = (RoomInfo)data;
+            RoomInfo? roomInfo = JsonConvert.DeserializeObject<RoomInfo>(data.ToString());
 
             Room room = new(roomInfo, client);
 
             Packet packet = new(PacketType.MakeRoomSuccess, roomInfo);
+
+            Console.WriteLine($"Make Room Successful!");
 
             Messenger.Send(client, packet.ToJson());
 
@@ -50,7 +55,7 @@ namespace Yaong_Omok_Server {
             Packet? packet;
 
             if(rooms.TryGetValue(roomInfo.ID, out Room? room)) {
-                if(room.Password == roomInfo.Password) {
+                if(room.Password == "" || room.Password == roomInfo.Password) {
                     packet = new(PacketType.EnterRoom, roomInfo);
                     room.EnterClient(client);
                 }

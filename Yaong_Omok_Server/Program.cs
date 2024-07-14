@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -42,6 +43,10 @@ namespace Yaong_Omok_Server {
                     string message = Encoding.ASCII.GetString(buffer, 0, nbytes);
 
                     Console.WriteLine(message);
+
+                    message = message.Replace("||", "");
+
+                    Dispatcher.Instance.Dispatch(client, message);
                 }
                 catch(ObjectDisposedException) {
                     break;
