@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -10,7 +9,15 @@ namespace Yaong_Omok_Server {
         private static List<TcpClient> _clients = [];
 
         private static void Main() {
-            Server().Wait();
+            /*List<UserInfo> ds = Database.SelectAll("Users");
+            for(int i = 0; i < ds.Count; ++i) {
+                Console.WriteLine($"| {ds[i].nickname} | {ds[i].password} | {ds[i].point} |");
+            }*/
+
+            UserInfo userInfo = Database.SelectByNickname("Users", "Hyunjun");
+            Console.WriteLine($"| {userInfo.nickname} | {userInfo.password} | {userInfo.point} |");
+
+            //Server().Wait();
         }
 
         private async static Task Server() {
@@ -42,7 +49,7 @@ namespace Yaong_Omok_Server {
 
                     string message = Encoding.ASCII.GetString(buffer, 0, nbytes);
 
-                    Console.WriteLine(message);
+                    //Console.WriteLine(message);
 
                     message = message.Replace("||", "");
 

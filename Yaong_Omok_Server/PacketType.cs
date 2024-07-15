@@ -10,6 +10,8 @@
         EnterRoom,
         ExitRoom,
 
-        StartRoom
+        StartRoom,
+
+        Move
     }
 }

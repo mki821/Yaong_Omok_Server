@@ -9,5 +9,12 @@ namespace Yaong_Omok_Server {
             NetworkStream stream = client.GetStream();
             await stream.WriteAsync(buffer);
         }
+
+        public async static void Send(Client client, string message) {
+            byte[] buffer = Encoding.ASCII.GetBytes(message + "||");
+
+            NetworkStream stream = client.client.GetStream();
+            await stream.WriteAsync(buffer);
+        }
     }
 }

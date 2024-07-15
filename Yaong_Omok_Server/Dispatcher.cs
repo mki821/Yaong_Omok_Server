@@ -1,15 +1,14 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
+﻿using System.Net.Sockets;
 using Newtonsoft.Json;
 
 namespace Yaong_Omok_Server {
     public class Dispatcher : Singleton<Dispatcher> {
         public Dictionary<string, Room> rooms = [];
 
-        public void Dispatch(TcpClient client, string message) {
+        public void Dispatch(TcpClient tcpClient, string message) {
             Packet? packet = JsonConvert.DeserializeObject<Packet>(message);
+
+            Client client = new(tcpClient);
 
             switch (packet.Type) {
                 case PacketType.MakeRoom:
@@ -26,10 +25,13 @@ namespace Yaong_Omok_Server {
                     break;
                 case PacketType.StartRoom:
                     break;
+                case PacketType.Move:
+                    Move(client, packet.Data);
+                    break;
             }
         }
 
-        private void MakeRoom(TcpClient client, object data) {
+        private void MakeRoom(Client client, object data) {
             RoomInfo? roomInfo = JsonConvert.DeserializeObject<RoomInfo>(data.ToString());
 
             Room room = new(roomInfo, client);
@@ -37,19 +39,20 @@ namespace Yaong_Omok_Server {
             Packet packet = new(PacketType.MakeRoomSuccess, roomInfo);
 
             Console.WriteLine($"Make Room Successful!");
+            Console.WriteLine($"(ID: {room.ID}, Name: {room.Name}{((room.Password != "") ? $", Password: {room.Password}" : "")})");
 
             Messenger.Send(client, packet.ToJson());
 
             rooms.Add(room.ID ,room);
         }
 
-        private void RefreshRoom(TcpClient client) {
+        private void RefreshRoom(Client client) {
             Packet packet = new(PacketType.RefreshRoom, rooms);
 
             Messenger.Send(client, packet.ToJson());
         }
 
-        private void EnterRoom(TcpClient client, object data) {
+        private void EnterRoom(Client client, object data) {
             RoomInfo roomInfo = (RoomInfo)data;
 
             Packet? packet;
@@ -68,7 +71,7 @@ namespace Yaong_Omok_Server {
             Messenger.Send(client, packet.ToJson());
         }
 
-        private void ExitRoom(TcpClient client, object data) {
+        private void ExitRoom(Client client, object data) {
             string roomID = (string)data;
 
             Packet? packet;
@@ -81,6 +84,12 @@ namespace Yaong_Omok_Server {
             else packet = new(PacketType.Error, 1);
 
             Messenger.Send(client, packet.ToJson());
+        }
+
+        private void Move(Client client, object data) {
+            Move? move = JsonConvert.DeserializeObject<Move>(data.ToString());
+
+            client.belongRoom.Board.Move(move);
         }
     }
 }
