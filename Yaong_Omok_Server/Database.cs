@@ -65,6 +65,7 @@ namespace Yaong_Omok_Server {
             try {
                 using(SQLiteConnection connection = new SQLiteConnection(dataSource)) {
                     connection.Open();
+
                     string sql = $"INSERT INTO {table} VALUES ({value})";
                     SQLiteCommand cmd = new SQLiteCommand(sql, connection);
                     cmd.ExecuteNonQuery();

@@ -11,6 +11,12 @@ namespace Yaong_Omok_Server {
             Client client = new(tcpClient);
 
             switch (packet.Type) {
+                case PacketType.Register:
+                    Register(client, packet.Data);
+                    break;
+                case PacketType.Login:
+                    Login(client, packet.Data);
+                    break;
                 case PacketType.MakeRoom:
                     MakeRoom(client, packet.Data);
                     break;
@@ -29,6 +35,40 @@ namespace Yaong_Omok_Server {
                     Move(client, packet.Data);
                     break;
             }
+        }
+
+        private static void Register(Client client, object data) {
+            UserInfo? user = JsonConvert.DeserializeObject<UserInfo>(data.ToString());
+
+            UserInfo? existUser = Database.SelectByNickname("Users", user.nickname);
+
+            Packet packet;
+
+            if(existUser == null) {
+                Database.Insert("Users", $"'{user.nickname}', '{Database.SHA256HASH(user.password)}', {user.point}");
+                client.userInfo = user;
+                packet = new(PacketType.Register, true);
+            }
+            else packet = new(PacketType.Register, false);
+
+
+            Messenger.Send(client, packet.ToJson());
+        }
+
+        private static void Login(Client client, object data) {
+            UserInfo? user = JsonConvert.DeserializeObject<UserInfo>(data.ToString());
+
+            UserInfo? existUser = Database.SelectByNickname("Users", user.nickname);
+
+            Packet packet;
+
+            bool isCorrect = existUser != null && Database.SHA256HASH(user.password) == existUser.password;
+
+            if(isCorrect) client.userInfo = user;
+
+            packet = new(PacketType.Login, isCorrect);
+
+            Messenger.Send(client, packet.ToJson());
         }
 
         private void MakeRoom(Client client, object data) {
@@ -86,7 +126,7 @@ namespace Yaong_Omok_Server {
             Messenger.Send(client, packet.ToJson());
         }
 
-        private void Move(Client client, object data) {
+        private static void Move(Client client, object data) {
             Move? move = JsonConvert.DeserializeObject<Move>(data.ToString());
 
             client.belongRoom.Board.Move(move);

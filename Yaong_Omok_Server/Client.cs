@@ -1,18 +1,15 @@
 ﻿using System.Net.Sockets;
 
 namespace Yaong_Omok_Server {
-    public class Client {
-        public TcpClient client;
+    public class Client(TcpClient client) {
+        public TcpClient client = client;
         public Room? belongRoom;
-
-        public Client(TcpClient client) {
-            this.client = client;
-        }
+        public UserInfo? userInfo;
     }
 
     public class UserInfo {
-        public string nickname;
-        public string password;
+        public string? nickname;
+        public string? password;
         public int point;
     }
 }

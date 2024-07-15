@@ -9,15 +9,7 @@ namespace Yaong_Omok_Server {
         private static List<TcpClient> _clients = [];
 
         private static void Main() {
-            /*List<UserInfo> ds = Database.SelectAll("Users");
-            for(int i = 0; i < ds.Count; ++i) {
-                Console.WriteLine($"| {ds[i].nickname} | {ds[i].password} | {ds[i].point} |");
-            }*/
-
-            UserInfo userInfo = Database.SelectByNickname("Users", "Hyunjun");
-            Console.WriteLine($"| {userInfo.nickname} | {userInfo.password} | {userInfo.point} |");
-
-            //Server().Wait();
+            Server().Wait();
         }
 
         private async static Task Server() {
