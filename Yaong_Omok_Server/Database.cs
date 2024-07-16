@@ -46,6 +46,8 @@ namespace Yaong_Omok_Server {
                 adapter = new SQLiteDataAdapter(sql, dataSource);
                 adapter.Fill(ds, table);
 
+                if(ds.Tables[table].Rows.Count == 0) return null;
+                    
                 DataRow dr = ds.Tables[table].Rows[0];
 
                 userInfo = new() {

@@ -47,9 +47,8 @@ namespace Yaong_Omok_Server {
 
                     Dispatcher.Instance.Dispatch(client, message);
                 }
-                catch(ObjectDisposedException) {
-                    break;
-                }
+                catch(ObjectDisposedException) { break; }
+                catch(IOException) { break; }
             }
             Console.WriteLine("Disconnect Client!");
             stream.Close();
