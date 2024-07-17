@@ -74,16 +74,19 @@ namespace Yaong_Omok_Server {
         private void MakeRoom(Client client, object data) {
             RoomInfo? roomInfo = JsonConvert.DeserializeObject<RoomInfo>(data.ToString());
 
-            Room room = new(roomInfo, client);
+            Packet packet = new(PacketType.Error, ErrorType.MakeRoomFailure);
 
-            Packet packet = new(PacketType.MakeRoomSuccess, roomInfo);
+            if(!rooms.ContainsKey(roomInfo.ID)) {
+                Room room = new(roomInfo, client);
+                rooms.Add(room.ID, room);
 
-            Console.WriteLine($"Make Room Successful!");
-            Console.WriteLine($"(ID: {room.ID}, Name: {room.Name}{((room.Password != "") ? $", Password: {room.Password}" : "")})");
+                packet = new(PacketType.MakeRoomSuccess, roomInfo);
+
+                Console.WriteLine($"Make Room Successful!");
+                Console.WriteLine($"(ID: {room.ID}, Name: {room.Name}{((room.Password != "") ? $", Password: {room.Password}" : "")})");
+            }
 
             Messenger.Send(client, packet.ToJson());
-
-            rooms.Add(room.ID ,room);
         }
 
         private void RefreshRoom(Client client) {
@@ -93,7 +96,7 @@ namespace Yaong_Omok_Server {
         }
 
         private void EnterRoom(Client client, object data) {
-            RoomInfo roomInfo = (RoomInfo)data;
+            RoomInfo? roomInfo = JsonConvert.DeserializeObject<RoomInfo>(data.ToString());
 
             Packet? packet;
 
@@ -106,30 +109,33 @@ namespace Yaong_Omok_Server {
                     packet = new(PacketType.EnterRoom, null);
                 }
             }
-            else packet = new(PacketType.Error, 1);
+            else packet = new(PacketType.Error, ErrorType.MissingRoom);
 
             Messenger.Send(client, packet.ToJson());
         }
 
         private void ExitRoom(Client client, object data) {
-            string roomID = (string)data;
+            string? roomID = JsonConvert.DeserializeObject<string>(data.ToString());
 
             Packet? packet;
 
             if(rooms.TryGetValue(roomID, out Room? room)) {
                 room.ExitClient(client);
 
-                packet = new(PacketType.ExitRoom, 1);
+                packet = new(PacketType.ExitRoom, true);
             }
-            else packet = new(PacketType.Error, 1);
+            else packet = new(PacketType.Error, ErrorType.MissingRoom);
 
             Messenger.Send(client, packet.ToJson());
         }
 
         private static void Move(Client client, object data) {
-            Move? move = JsonConvert.DeserializeObject<Move>(data.ToString());
+            Move? move = JsonConvert.DeserializeObject<MovePacket>(data.ToString())?.GetMove();
 
             client.belongRoom.Board.Move(move);
+
+            Packet packet = new(PacketType.Move, client.belongRoom.Board);
+            Messenger.Send(client, packet.ToJson());
         }
     }
 }

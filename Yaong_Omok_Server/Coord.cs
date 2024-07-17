@@ -2,6 +2,8 @@
     public class Coord {
         public short x, y;
 
+        public Coord() { }
+
         public Coord(short x, short y) {
             this.x = x;
             this.y = y;

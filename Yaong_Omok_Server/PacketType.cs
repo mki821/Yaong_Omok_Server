@@ -17,4 +17,11 @@
 
         Move
     }
+
+    public enum ErrorType : ushort {
+        None = 0,
+        
+        MissingRoom,
+        MakeRoomFailure
+    }
 }

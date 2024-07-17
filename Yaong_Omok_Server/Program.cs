@@ -30,22 +30,35 @@ namespace Yaong_Omok_Server {
 
         private async static void HandleClient(TcpClient client) {
             NetworkStream stream = client.GetStream();
+            StringBuilder plus = new();
             
             while(stream.CanRead) {
                 try {
                     byte[] buffer = new byte[MAX_SIZE];
-                    int nbytes = await stream.ReadAsync(buffer);
+                    StringBuilder output = new();
 
-                    if(nbytes == 0)
-                        break;
+                    if(plus.ToString().Length > 0) {
+                        output.Append(plus);
+                        plus.Clear();
+                    }
 
-                    string message = Encoding.ASCII.GetString(buffer, 0, nbytes);
+                    while(!output.ToString().Contains("||")) {
+                        if(stream.DataAvailable) {
+                            int nbytes = await stream.ReadAsync(buffer);
+                            output.Append(Encoding.ASCII.GetString(buffer, 0, nbytes));
+                        }
+                    }
 
-                    //Console.WriteLine(message);
+                    string[] datas = output.ToString().Replace("\0", "").Split("||");
 
-                    message = message.Replace("||", "");
+                    for(int i = 0; i < datas.Length; ++i) {
+                        string message = datas[i];
 
-                    Dispatcher.Instance.Dispatch(client, message);
+                        if(message.Length > 0) {
+                            if(i == (datas.Length - 1)) plus.Append(message);
+                            else Dispatcher.Instance.Dispatch(client, message);
+                        }
+                    }
                 }
                 catch(ObjectDisposedException) { break; }
                 catch(IOException) { break; }
