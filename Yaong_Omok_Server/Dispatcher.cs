@@ -5,10 +5,8 @@ namespace Yaong_Omok_Server {
     public class Dispatcher : Singleton<Dispatcher> {
         public Dictionary<string, Room> rooms = [];
 
-        public void Dispatch(TcpClient tcpClient, string message) {
+        public void Dispatch(Client client, string message) {
             Packet? packet = JsonConvert.DeserializeObject<Packet>(message);
-
-            Client client = new(tcpClient);
 
             switch (packet.Type) {
                 case PacketType.Register:

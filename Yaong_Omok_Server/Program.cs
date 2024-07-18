@@ -28,10 +28,11 @@ namespace Yaong_Omok_Server {
             }
         }
 
-        private async static void HandleClient(TcpClient client) {
-            NetworkStream stream = client.GetStream();
+        private async static void HandleClient(TcpClient tcpClient) {
+            NetworkStream stream = tcpClient.GetStream();
             StringBuilder plus = new();
-            
+            Client client = new(tcpClient);
+
             while(stream.CanRead) {
                 try {
                     byte[] buffer = new byte[MAX_SIZE];
@@ -65,7 +66,7 @@ namespace Yaong_Omok_Server {
             }
             Console.WriteLine("Disconnect Client!");
             stream.Close();
-            client.Close();
+            tcpClient.Close();
         }
     }
 }
