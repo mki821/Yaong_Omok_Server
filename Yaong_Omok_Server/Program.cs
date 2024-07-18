@@ -43,10 +43,11 @@ namespace Yaong_Omok_Server {
                     }
 
                     while(!output.ToString().Contains("||")) {
-                        if(stream.DataAvailable) {
-                            int nbytes = await stream.ReadAsync(buffer);
-                            output.Append(Encoding.ASCII.GetString(buffer, 0, nbytes));
-                        }
+                        int nbytes = await stream.ReadAsync(buffer);
+
+                        if(nbytes == 0) throw new Exception();
+
+                        output.Append(Encoding.ASCII.GetString(buffer, 0, nbytes));
                     }
 
                     string[] datas = output.ToString().Replace("\0", "").Split("||");
@@ -60,8 +61,7 @@ namespace Yaong_Omok_Server {
                         }
                     }
                 }
-                catch(ObjectDisposedException) { break; }
-                catch(IOException) { break; }
+                catch { break; }
             }
             Console.WriteLine("Disconnect Client!");
             stream.Close();

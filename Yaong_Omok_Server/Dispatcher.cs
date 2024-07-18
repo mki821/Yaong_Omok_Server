@@ -90,7 +90,13 @@ namespace Yaong_Omok_Server {
         }
 
         private void RefreshRoom(Client client) {
-            Packet packet = new(PacketType.RefreshRoom, rooms);
+            List<RoomInfo> roomInfos = new List<RoomInfo>();
+
+            foreach(Room room in rooms.Values) {
+                roomInfos.Add(room.GetInfo());
+            }
+
+            Packet packet = new(PacketType.RefreshRoom, roomInfos);
 
             Messenger.Send(client, packet.ToJson());
         }

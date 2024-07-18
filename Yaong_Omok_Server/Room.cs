@@ -28,6 +28,10 @@
             return client1 != null && client2 != null;
         }
 
+        public RoomInfo GetInfo() {
+            return new RoomInfo(ID, Name, Password);
+        }
+
         public void Broadcast(string message) {
             if(client1 != null) Messenger.Send(client1, message);
             if(client2 != null) Messenger.Send(client2, message);
