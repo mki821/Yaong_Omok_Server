@@ -13,15 +13,24 @@
         public Client? client1 = client;
         public Client? client2;
 
-        private GoBoard _board;
+        private GoBoard? _board;
 
-        public GoBoard Board {
-            get => _board;
+        public GoBoard? Board {
+            get {
+                if(_board == null)
+                    _board = new GoBoard();
+
+                return _board;
+            }
             private set => _board = value;
         }
 
         public bool IsFull {
             get => client1 != null && client2 != null;
+        }
+
+        public bool IsEmpty { 
+            get => client1 == null && client2 == null; 
         }
 
         public bool CanStart() {
@@ -53,11 +62,18 @@
             else if(client2 == client) client2 = null;
         }
 
-        public void GameStart() {
-            _board = new GoBoard();
+        public void ChangeTeam() {
+            (client1, client2) = (client2, client1);
+        }
 
-            Packet packet = new(PacketType.StartRoom, 0);
-            Broadcast(packet.ToJson());
+        public bool GameStart() {
+            if(IsFull) {
+                Packet packet = new(PacketType.StartRoom, 0);
+                Broadcast(packet.ToJson());
+
+                return true;
+            }
+            return false;
         }
     }
 }

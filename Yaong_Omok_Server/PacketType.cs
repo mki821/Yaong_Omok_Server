@@ -7,6 +7,9 @@
         Register,
         Login,
 
+        MatchStart,
+        MatchCancel,
+
         MakeRoom,
         MakeRoomSuccess,
         RefreshRoom,

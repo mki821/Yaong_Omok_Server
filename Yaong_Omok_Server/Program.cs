@@ -1,12 +1,16 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Timers;
 
 namespace Yaong_Omok_Server {
     public class Program {
         const int MAX_SIZE = 1024;
 
-        private static List<TcpClient> _clients = [];
+        public static List<Client> matchWatingClients = [];
+
+        private static List<Client> _clients = [];
+        private static System.Timers.Timer? _timer;
 
         private static void Main() {
             Server().Wait();
@@ -18,9 +22,10 @@ namespace Yaong_Omok_Server {
 
             Console.WriteLine("Server is Running!");
 
+            SetMatchMaking();
+
             while(true) {
                 TcpClient client = await listener.AcceptTcpClientAsync();
-                _clients.Add(client);
 
                 Console.WriteLine("Connect Client!");
 
@@ -28,10 +33,26 @@ namespace Yaong_Omok_Server {
             }
         }
 
+        private static void SetMatchMaking() {
+            _timer = new System.Timers.Timer(1000);
+
+            _timer.Elapsed += new ElapsedEventHandler(OnMatchMaking);
+
+            _timer.AutoReset = true;
+            _timer.Enabled = true;
+        }
+
+        private static void OnMatchMaking(Object? source, ElapsedEventArgs e) {
+            if(matchWatingClients.Count == 0) return;
+
+            MatchMaking.Match(matchWatingClients);
+        }
+
         private async static void HandleClient(TcpClient tcpClient) {
             NetworkStream stream = tcpClient.GetStream();
             StringBuilder plus = new();
             Client client = new(tcpClient);
+            _clients.Add(client);
 
             while(stream.CanRead) {
                 try {
@@ -62,9 +83,13 @@ namespace Yaong_Omok_Server {
                         }
                     }
                 }
-                catch { break; }
+                catch(Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    break;
+                }
             }
             Console.WriteLine("Disconnect Client!");
+            _clients.Remove(client);
             stream.Close();
             tcpClient.Close();
         }

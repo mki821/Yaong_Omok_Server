@@ -1,5 +1,4 @@
-﻿using System.Net.Sockets;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Yaong_Omok_Server {
     public class Dispatcher : Singleton<Dispatcher> {
@@ -14,6 +13,12 @@ namespace Yaong_Omok_Server {
                     break;
                 case PacketType.Login:
                     Login(client, packet.Data);
+                    break;
+                case PacketType.MatchStart:
+                    MatchStart(client);
+                    break;
+                case PacketType.MatchCancel:
+                    MatchCancel(client);
                     break;
                 case PacketType.MakeRoom:
                     MakeRoom(client, packet.Data);
@@ -40,15 +45,13 @@ namespace Yaong_Omok_Server {
 
             UserInfo? existUser = Database.SelectByNickname("Users", user.nickname);
 
-            Packet packet;
-
-            if(existUser == null) {
-                Database.Insert("Users", $"'{user.nickname}', '{Database.SHA256HASH(user.password)}', {user.point}");
+            bool isExistUser = existUser == null;
+            if(isExistUser) {
+                Database.Insert("Users", $"'{user.nickname}', '{Database.SHA256HASH(user.password)}', {user.point}, {user.mmr}");
                 client.userInfo = user;
-                packet = new(PacketType.Register, true);
             }
-            else packet = new(PacketType.Register, false);
 
+            Packet packet = new(PacketType.Register, isExistUser);
 
             Messenger.Send(client, packet.ToJson());
         }
@@ -58,13 +61,31 @@ namespace Yaong_Omok_Server {
 
             UserInfo? existUser = Database.SelectByNickname("Users", user.nickname);
 
-            Packet packet;
-
             bool isCorrect = existUser != null && Database.SHA256HASH(user.password) == existUser.password;
 
             if(isCorrect) client.userInfo = user;
 
-            packet = new(PacketType.Login, isCorrect);
+            Packet packet = new(PacketType.Login, isCorrect);
+
+            Messenger.Send(client, packet.ToJson());
+        }
+
+        private static void MatchStart(Client client) {
+            Program.matchWatingClients.Add(client);
+
+            Console.WriteLine($"{client.userInfo.nickname} joined the Queueing.");
+
+            Packet packet = new(PacketType.MatchStart, null);
+
+            Messenger.Send(client, packet.ToJson());
+        }
+        
+        private static void MatchCancel(Client client) {
+            Program.matchWatingClients.Remove(client);
+
+            Console.WriteLine($"{client.userInfo.nickname} left the Queueing.");
+
+            Packet packet = new(PacketType.MatchCancel, null);
 
             Messenger.Send(client, packet.ToJson());
         }
@@ -82,6 +103,8 @@ namespace Yaong_Omok_Server {
 
                 Console.WriteLine($"Make Room Successful!");
                 Console.WriteLine($"(ID: {room.ID}, Name: {room.Name}{((room.Password != "") ? $", Password: {room.Password}" : "")})");
+
+                room.EnterClient(client);
             }
 
             Messenger.Send(client, packet.ToJson());
@@ -126,6 +149,9 @@ namespace Yaong_Omok_Server {
             if(rooms.TryGetValue(roomID, out Room? room)) {
                 room.ExitClient(client);
 
+                if(room.IsEmpty)
+                    rooms.Remove(room.ID);
+
                 packet = new(PacketType.ExitRoom, true);
             }
             else packet = new(PacketType.Error, ErrorType.MissingRoom);
@@ -138,7 +164,7 @@ namespace Yaong_Omok_Server {
 
             client.belongRoom.Board.Move(move);
 
-            Packet packet = new(PacketType.Move, client.belongRoom.Board);
+            Packet packet = new(PacketType.Move, client.belongRoom.Board.Board);
             Messenger.Send(client, packet.ToJson());
         }
     }

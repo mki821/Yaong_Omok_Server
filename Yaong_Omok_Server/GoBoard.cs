@@ -14,11 +14,11 @@
     }
 
     public class GoBoard {
-        private static readonly int BoardSize = 15;
+        private static readonly int BoardSize = 9;
 
         private BoardInfo[,] _board = new BoardInfo[BoardSize, BoardSize];
 
-        public BoardInfo[,] Board { get => _board; }
+        public BoardInfo[,] Board { get =>_board; }
 
         public BoardInfo GetBoardInfo(int x, int y) {
             if(x < 0 || x >= BoardSize || y < 0 || y >= BoardSize)
