@@ -1,4 +1,5 @@
-﻿namespace Yaong_Omok_Server {
+﻿
+namespace Yaong_Omok_Server {
     public class RoomInfo(string id, string name, string password) {
         public string ID { get; private set; } = id;
         public string Name { get; private set; } = name;
@@ -33,10 +34,6 @@
             get => client1 == null && client2 == null; 
         }
 
-        public bool CanStart() {
-            return client1 != null && client2 != null;
-        }
-
         public RoomInfo GetInfo() {
             return new RoomInfo(ID, Name, Password);
         }
@@ -68,12 +65,20 @@
 
         public bool GameStart() {
             if(IsFull) {
-                Packet packet = new(PacketType.StartRoom, 0);
+                Packet packet = new(PacketType.StartGame, 0);
                 Broadcast(packet.ToJson());
 
                 return true;
             }
             return false;
+        }
+
+        public void GameEnd() {
+            client1.belongRoom = null;
+            client2.belongRoom = null;
+
+            client1 = null;
+            client2 = null;
         }
     }
 }

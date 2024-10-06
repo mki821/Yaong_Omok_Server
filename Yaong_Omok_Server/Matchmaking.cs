@@ -110,6 +110,15 @@ public class MatchMaking {
         Console.WriteLine($"[{playerB.mmr}] WinPoint: {playerB.winPoint}, DefeatPoint: {playerB.defeatPoint}");
         playerB.client.matchInfo.winPoint = playerB.winPoint;
         playerB.client.matchInfo.defeatPoint = playerB.defeatPoint;
+
+        RoomInfo roomInfo = new("", "", "");
+        Room room = new(roomInfo, playerA.client);
+        room.EnterClient(playerB.client);
+
+        (UserInfo, UserInfo) userInfos = (room.client1.userInfo, room.client2.userInfo);
+
+        Packet packet = new(PacketType.MatchSuccess, userInfos);
+        Messenger.Send(playerA.client, packet.ToJson());
     }
 
     private static List<Tuple<Player, Player>> FindBestMatching(Player[] players, int mmrLimit, out List<Player> unmatchedPlayers) {

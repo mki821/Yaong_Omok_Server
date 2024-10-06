@@ -9,6 +9,7 @@
 
         MatchStart,
         MatchCancel,
+        MatchSuccess,
 
         MakeRoom,
         MakeRoomSuccess,
@@ -16,9 +17,12 @@
         EnterRoom,
         ExitRoom,
 
-        StartRoom,
+        GetRoomInfo,
 
-        Move
+        StartGame,
+        Move,
+        MoveSuccess,
+        EndGame,
     }
 
     public enum ErrorType : ushort {

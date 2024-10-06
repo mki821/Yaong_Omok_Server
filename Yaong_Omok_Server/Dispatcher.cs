@@ -32,7 +32,11 @@ namespace Yaong_Omok_Server {
                 case PacketType.ExitRoom:
                     ExitRoom(client, packet.Data);
                     break;
-                case PacketType.StartRoom:
+                case PacketType.GetRoomInfo:
+                    GetRoomInfo(client);
+                    break;
+                case PacketType.StartGame:
+                    StartGame(client);
                     break;
                 case PacketType.Move:
                     Move(client, packet.Data);
@@ -75,7 +79,7 @@ namespace Yaong_Omok_Server {
 
             Console.WriteLine($"{client.userInfo.nickname} joined the Queueing.");
 
-            Packet packet = new(PacketType.MatchStart, null);
+            Packet packet = new(PacketType.MatchStart, true);
 
             Messenger.Send(client, packet.ToJson());
         }
@@ -85,7 +89,7 @@ namespace Yaong_Omok_Server {
 
             Console.WriteLine($"{client.userInfo.nickname} left the Queueing.");
 
-            Packet packet = new(PacketType.MatchCancel, null);
+            Packet packet = new(PacketType.MatchCancel, true);
 
             Messenger.Send(client, packet.ToJson());
         }
@@ -133,7 +137,7 @@ namespace Yaong_Omok_Server {
                     room.EnterClient(client);
                 }
                 else {
-                    packet = new(PacketType.EnterRoom, null);
+                    packet = new(PacketType.EnterRoom, true);
                 }
             }
             else packet = new(PacketType.Error, ErrorType.MissingRoom);
@@ -159,13 +163,44 @@ namespace Yaong_Omok_Server {
             Messenger.Send(client, packet.ToJson());
         }
 
+        private static void GetRoomInfo(Client client) {
+            (UserInfo, UserInfo) userInfos = (client.belongRoom.client1.userInfo, client.belongRoom.client2.userInfo);
+            Packet packet = new(PacketType.GetRoomInfo, userInfos);
+
+            Messenger.Send(client, packet.ToJson());
+        }
+
+        private void StartGame(Client client) {
+            if(client.belongRoom == null) {
+                Packet packet = new(PacketType.Error, ErrorType.MissingRoom);
+
+                Messenger.Send(client, packet.ToJson());
+            }
+            else {
+                client.belongRoom.GameStart();
+            }
+        }
+
         private static void Move(Client client, object data) {
             Move? move = JsonConvert.DeserializeObject<MovePacket>(data.ToString())?.GetMove();
 
             client.belongRoom.Board.Move(move);
 
-            Packet packet = new(PacketType.Move, client.belongRoom.Board.Board);
-            Messenger.Send(client, packet.ToJson());
+            Packet packet;
+
+            if(client.belongRoom.Board.IsEndGame) {
+                client.belongRoom.GameEnd();
+
+                packet = new(PacketType.EndGame, client.belongRoom.Board);
+                Messenger.Send(client, packet.ToJson());
+            }
+            else {
+                packet = new(PacketType.Move, client.belongRoom.Board.Board);
+                Messenger.Send(client, packet.ToJson());
+
+                packet = new(PacketType.MoveSuccess, client.belongRoom.Board.IsPrevMoveSuccess);
+                Messenger.Send(client, packet.ToJson());
+            }
         }
     }
 }

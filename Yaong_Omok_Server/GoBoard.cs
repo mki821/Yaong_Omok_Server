@@ -19,6 +19,8 @@
         private BoardInfo[,] _board = new BoardInfo[BoardSize, BoardSize];
 
         public BoardInfo[,] Board { get =>_board; }
+        public bool IsPrevMoveSuccess = false;
+        public bool IsEndGame = false;
 
         public BoardInfo GetBoardInfo(int x, int y) {
             if(x < 0 || x >= BoardSize || y < 0 || y >= BoardSize)
@@ -71,6 +73,8 @@
 
         public void Put(Move move) {
             SetBoardInfo(move.coord.x, move.coord.y, (BoardInfo)move.team);
+
+            IsPrevMoveSuccess = true;
         }
 
         public void Push(Move move) {
@@ -88,6 +92,8 @@
                 BoardInfo before = GetBoardInfo(move.coord + direction * (i - 1));
                 SetBoardInfo(move.coord + direction * i, before);
             }
+
+            IsPrevMoveSuccess = true;
         }
 
         public void Union(Move move) {
@@ -97,6 +103,8 @@
 
             Coord direction = Yaong_Omok_Server.Move.DirectionPos[(int)move.direction];
             SetBoardInfo(move.coord + direction, upgrade);
+
+            IsPrevMoveSuccess = true;
         }
 
         public void Kill(Move move) {
@@ -104,6 +112,8 @@
 
             Coord direction = Yaong_Omok_Server.Move.DirectionPos[(int)move.direction];
             SetBoardInfo(move.coord + direction, (BoardInfo)(3 * (int)move.team));
+
+            IsPrevMoveSuccess = true;
         }
     }
 }
